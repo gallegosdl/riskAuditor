@@ -1,0 +1,99 @@
+<template>
+    <lightning-card title="Profile Permission Set Explorer - Administrative Permissions" icon-name="standard:record_lookup">
+        <div class="slds-var-p-horizontal_medium">
+            <!-- Error message display -->
+            <template if:true={hasError}>
+                <div class="slds-notify slds-notify_alert slds-alert_error" role="alert">
+                    <span class="slds-assistive-text">Error</span>
+                    <lightning-icon icon-name="utility:error" alternative-text="Error" size="small" class="slds-var-m-right_x-small"></lightning-icon>
+                    <h2>{errorMessage}</h2>
+                </div>
+            </template>
+
+            <!-- No permissions warning -->
+            <template if:true={hasNoPermOptions}>
+                <div class="slds-notify slds-notify_alert slds-alert_warning" role="alert">
+                    <span class="slds-assistive-text">Warning</span>
+                    <lightning-icon icon-name="utility:warning" alternative-text="Warning" size="small" class="slds-var-m-right_x-small"></lightning-icon>
+                    <h2>No permission options available. Please check your permissions and try again.</h2>
+                </div>
+            </template>
+
+            <!-- Controls -->
+            <div class="slds-grid slds-gutters slds-var-m-bottom_medium">
+                <div class="slds-col slds-size_3-of-4">
+                    <lightning-combobox
+                        label="Select Permission"
+                        value={selectedPerm}
+                        options={permOptions}
+                        onchange={handlePermChange}
+                        disabled={hasNoPermOptions}
+                    ></lightning-combobox>
+                </div>
+                <div class="slds-col slds-size_1-of-4">
+                    <lightning-combobox
+                        label="Page Size"
+                        value={pageSize}
+                        options={pageSizeOptions}
+                        onchange={handlePageSizeChange}
+                    ></lightning-combobox>
+                </div>
+            </div>
+
+            <!-- Loading spinner -->
+            <template if:true={loading}>
+                <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+            </template>
+
+            <!-- Data table (custom SLDS table for full styling control) -->
+            <div class="table-wrap">
+                <table class="slds-table slds-table_bordered slds-table_cell-buffer slds-table_striped modern-table">
+                    <thead>
+                        <tr>
+                            <th scope="col"><div class="slds-truncate" title="Permission">Permission</div></th>
+                            <th scope="col"><div class="slds-truncate" title="Permission Set">Permission Set</div></th>
+                            <th scope="col"><div class="slds-truncate" title="Profile">Profile</div></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={rows} for:item="r">
+                            <tr key={r.key}>
+                                <td data-label="Permission">
+                                    <span class={r.permissionPillClass}>{r.permissionLabel}</span>
+                                </td>
+                                <td data-label="Permission Set">
+                                    <a href={r.psUrl} target="_blank">{r.permissionSetLabel}</a>
+                                </td>
+                                <td data-label="Profile">
+                                    <template if:true={r.profileUrl}>
+                                        <a href={r.profileUrl} target="_blank">{r.profileName}</a>
+                                    </template>
+                                    <template if:false={r.profileUrl}>
+                                        <span class="muted">—</span>
+                                    </template>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="slds-grid slds-grid_align-spread slds-var-m-top_small">
+                <div>
+                    <template if:true={total}>
+                        Showing page {pageNum} of {totalPages} • {total} results
+                    </template>
+                </div>
+                <div>
+                    <lightning-button-group>
+                        <lightning-button label="First" onclick={goFirst} disabled={isFirst}></lightning-button>
+                        <lightning-button label="Previous" onclick={goPrev} disabled={isFirst}></lightning-button>
+                        <lightning-button label="Next" onclick={goNext} disabled={isLast}></lightning-button>
+                        <lightning-button label="Last" onclick={goLast} disabled={isLast}></lightning-button>
+                    </lightning-button-group>
+                </div>
+            </div>
+        </div>
+    </lightning-card>
+</template>

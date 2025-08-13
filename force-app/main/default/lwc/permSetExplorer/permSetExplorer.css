@@ -1,0 +1,23 @@
+.container { max-width: 1200px; margin: 0 auto; }
+.w-100 { width: 100%; }
+.muted { color: var(--lwc-colorTextWeak, #6b6d70); }
+.empty { color: var(--lwc-colorTextWeak, #6b6d70); }
+
+/* Stylish pill for permission label */
+.pill {
+  display: inline-block;
+  padding: .125rem .5rem;
+  border-radius: 1rem;
+  font-weight: 600;
+  background: #eef4ff;
+  color: #1b5fbd;
+}
+.pill--perm { background: #eef7ee; color: #0e6f2c; }
+
+/* Modern datatable tweaks */
+.table-wrap { overflow: auto; }
+.modern-table { border-radius: 8px; box-shadow: 0 1px 2px rgba(0,0,0,.06); }
+.modern-table thead th { background: #f8f9fb; font-weight: 700; }
+.modern-table tbody tr:hover > td { background: #fbfdff; }
+
+
