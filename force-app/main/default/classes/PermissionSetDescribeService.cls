@@ -133,6 +133,12 @@ public with sharing class PermissionSetDescribeService {
             throw new AuraHandledException('Permission API name cannot be blank');
         }
         
+        // Validate that permissionApi exists as a field on PermissionSet
+        Map<String, Schema.SObjectField> fieldMap = Schema.SObjectType.PermissionSet.fields.getMap();
+        if (!fieldMap.containsKey(permissionApi.toLowerCase())) {
+            throw new AuraHandledException('Invalid permission field: ' + permissionApi);
+        }
+        
         // Default pagination values if not provided
         if (pageNum <= 0) {
             pageNum = 1;
@@ -145,25 +151,33 @@ public with sharing class PermissionSetDescribeService {
         // Calculate offset for pagination
         Integer offset = (pageNum - 1) * pageSize;
         
-        // Dynamic SOQL to filter profiles with the specific permission set to true
-        String soql = 'SELECT Id, Label, ProfileId, Profile.Name FROM PermissionSet ' +
-                    'WHERE IsOwnedByProfile = true AND ProfileId != null AND ' + 
-                    permissionApi + ' = true ' +
-                    'ORDER BY Profile.Name LIMIT ' + pageSize + ' OFFSET ' + offset;
+        // Use dynamic SOQL with a safe field reference
+        List<PermissionSet> permSets;
+        Integer totalCount;
         
-        System.debug('Executing SOQL: ' + soql);
-        
-        // Count total matching records for pagination metadata
-        String countSoql = 'SELECT COUNT() FROM PermissionSet ' +
+        try {
+            // Use a safe field reference after validation
+            String safeFieldName = String.escapeSingleQuotes(permissionApi);
+            
+            // Count total matching records for pagination metadata
+            String countSoql = 'SELECT COUNT() FROM PermissionSet ' +
+                            'WHERE IsOwnedByProfile = true AND ProfileId != null AND ' + 
+                            safeFieldName + ' = true';
+                            
+            totalCount = Database.countQuery(countSoql);
+            System.debug('Total matching profiles: ' + totalCount);
+
+            // Query for paginated profiles with the specified permission
+            String soql = 'SELECT Id, Label, ProfileId, Profile.Name FROM PermissionSet ' +
                         'WHERE IsOwnedByProfile = true AND ProfileId != null AND ' + 
-                        permissionApi + ' = true';
-                        
-        Integer totalCount = Database.countQuery(countSoql);
-        System.debug('Total matching profiles: ' + totalCount);
-        
-        // Query for paginated profiles with the specified permission
-        List<PermissionSet> permSets = Database.query(soql);
-        System.debug('Found permission sets: ' + permSets.size());
+                        safeFieldName + ' = true ' +
+                        'ORDER BY Profile.Name LIMIT ' + pageSize + ' OFFSET ' + offset;
+            
+            permSets = Database.query(soql);
+            System.debug('Found permission sets: ' + permSets.size());
+        } catch (Exception e) {
+            throw new AuraHandledException('Error querying permission data: ' + e.getMessage());
+        }
         
         // Transform query results to MatrixRows for display
         List<MatrixRow> rows = new List<MatrixRow>();
